@@ -1,0 +1,16 @@
+export const webPalette = {
+  primary: '#be0079',
+  task: '#ed6c02',
+  panel: '#2e7d32',
+  profile: '#9c27b0',
+  settings: '#d32f2f',
+  info: '#be0079',
+  bg: '#f5f7fb',
+  textPrimary: '#111827',
+  textSecondary: '#4b5563',
+  border: '#d1d5db',
+  borderSoft: '#e5e7eb',
+  white: '#ffffff',
+  gradientStart: '#be0079',
+  gradientEnd: '#ff00d0',
+};
