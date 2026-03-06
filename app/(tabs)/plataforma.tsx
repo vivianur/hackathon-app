@@ -1,10 +1,19 @@
 import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import ScreenContainer from '@/components/layout/ScreenContainer';
 import ScreenTitle from '@/components/layout/ScreenTitle';
 import { useAdaptiveTheme } from '@/hooks';
 import { webPalette } from '../../constants/webPalette';
+
+const TABLET_BREAKPOINT = 768;
+const IPAD_AIR_MIN_SIDE = 820;
+const IPAD_PRO_MIN_SIDE = 1024;
+const IPAD_AIR_MIN_LONG_SIDE = 1180;
+const IPAD_PRO_MIN_LONG_SIDE = 1366;
+const PLATFORM_MODAL_SHIFT_IPAD_MINI = 85;
+const PLATFORM_MODAL_SHIFT_IPAD_AIR = 155;
+const PLATFORM_MODAL_SHIFT_IPAD_PRO = 245;
 
 type Topic = {
   titulo: string;
@@ -47,7 +56,23 @@ const recursos: Topic[] = [
 
 export default function PlataformaScreen() {
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  const [showUnavailableModal, setShowUnavailableModal] = useState(false);
   const { ui } = useAdaptiveTheme();
+  const { width, height } = useWindowDimensions();
+  const isTabletOrLarger = width >= TABLET_BREAKPOINT;
+  const shorterSide = Math.min(width, height);
+  const longerSide = Math.max(width, height);
+  const tabletModalVerticalShift = !isTabletOrLarger
+    ? 0
+    : shorterSide >= IPAD_PRO_MIN_SIDE || longerSide >= IPAD_PRO_MIN_LONG_SIDE
+      ? PLATFORM_MODAL_SHIFT_IPAD_PRO
+      : shorterSide >= IPAD_AIR_MIN_SIDE || longerSide >= IPAD_AIR_MIN_LONG_SIDE
+        ? PLATFORM_MODAL_SHIFT_IPAD_AIR
+        : PLATFORM_MODAL_SHIFT_IPAD_MINI;
+
+  const handleUnavailableContent = () => {
+    setShowUnavailableModal(true);
+  };
 
   if (selectedTopic) {
     return (
@@ -55,7 +80,7 @@ export default function PlataformaScreen() {
         <Pressable style={[styles.backBtn, { borderColor: ui.colors.border, borderWidth: ui.borders.width, borderRadius: ui.shape.radius, backgroundColor: ui.colors.surface }]} onPress={() => setSelectedTopic(null)}>
           <View style={styles.backBtnContent}>
             <MaterialIcons name="arrow-back" size={18} color={ui.colors.textPrimary} />
-            <Text style={styles.backBtnText}>Voltar</Text>
+            <Text style={[styles.backBtnText, { color: ui.colors.textPrimary }]}>Voltar</Text>
           </View>
         </Pressable>
 
@@ -69,13 +94,13 @@ export default function PlataformaScreen() {
               {ui.content.showSecondaryText ? <Text style={[styles.lessonSub, { color: ui.colors.textSecondary, fontSize: ui.typography.small }]}>Material e exercícios</Text> : null}
             </View>
             <View style={styles.lessonActions}>
-              <Pressable style={[styles.primaryBtn, { backgroundColor: ui.colors.accent }]}>
+              <Pressable style={[styles.primaryBtn, { backgroundColor: ui.colors.accent }]} onPress={handleUnavailableContent}>
                 <View style={styles.actionBtnContent}>
                   <MaterialIcons name="play-circle-outline" size={16} color="#fff" />
                   <Text style={styles.primaryBtnText}>Vídeo</Text>
                 </View>
               </Pressable>
-              <Pressable style={[styles.primaryBtn, { backgroundColor: ui.colors.accent }]}>
+              <Pressable style={[styles.primaryBtn, { backgroundColor: ui.colors.accent }]} onPress={handleUnavailableContent}>
                 <View style={styles.actionBtnContent}>
                   <MaterialIcons name="text-snippet" size={16} color="#fff" />
                   <Text style={styles.primaryBtnText}>Texto</Text>
@@ -84,6 +109,41 @@ export default function PlataformaScreen() {
             </View>
           </View>
         ))}
+
+        <Modal
+          visible={showUnavailableModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowUnavailableModal(false)}
+        >
+          <View style={[styles.modalOverlay, isTabletOrLarger && styles.modalOverlayWide]}>
+            <ScrollView
+              style={styles.modalScroll}
+              contentContainerStyle={[styles.modalScrollContent, isTabletOrLarger && styles.modalScrollContentWide]}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <View
+                style={[
+                  styles.modalCard,
+                  { backgroundColor: ui.colors.surface, borderColor: ui.colors.border, borderRadius: ui.shape.radius },
+                  isTabletOrLarger && { transform: [{ translateY: -tabletModalVerticalShift }] },
+                ]}
+              >
+                <Pressable
+                  style={styles.modalCloseBtn}
+                  onPress={() => setShowUnavailableModal(false)}
+                  accessibilityLabel="Fechar alerta"
+                >
+                  <MaterialIcons name="close" size={20} color={ui.colors.textSecondary} />
+                </Pressable>
+
+                <Text style={[styles.modalTitle, { color: ui.colors.textPrimary }]}>Conteudo indisponivel no momento</Text>
+                <Text style={[styles.modalMessage, { color: ui.colors.textSecondary }]}>Desculpe, este material esta temporariamente indisponivel. Estamos trabalhando para liberar o conteudo o quanto antes. Obrigado pela compreensao.</Text>
+              </View>
+            </ScrollView>
+          </View>
+        </Modal>
       </ScreenContainer>
     );
   }
@@ -186,5 +246,44 @@ const styles = StyleSheet.create({
   subtitle: {
     lineHeight: 20,
     marginBottom: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  modalOverlayWide: {
+    paddingHorizontal: 24,
+  },
+  modalScroll: {
+    width: '100%',
+  },
+  modalScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  modalScrollContentWide: {
+    paddingVertical: 24,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 420,
+    borderWidth: 1,
+    padding: 16,
+    gap: 12,
+  },
+  modalCloseBtn: {
+    alignSelf: 'flex-end',
+    padding: 2,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  modalMessage: {
+    lineHeight: 20,
   },
 });

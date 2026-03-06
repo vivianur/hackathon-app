@@ -1,12 +1,28 @@
 import React from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Modal, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import ScreenContainer from '@/components/layout/ScreenContainer';
 import ScreenTitle from '@/components/layout/ScreenTitle';
 import { useAdaptiveTheme, useTasks } from '@/hooks';
 import { webPalette } from '../../constants/webPalette';
 
-function PomodoroTimer() {
+const TABLET_BREAKPOINT = 768;
+const IPAD_AIR_MIN_SIDE = 820;
+const IPAD_PRO_MIN_SIDE = 1024;
+const IPAD_AIR_MIN_LONG_SIDE = 1180;
+const IPAD_PRO_MIN_LONG_SIDE = 1366;
+const TASKS_MODAL_SHIFT_IPAD_MINI = 70;
+const TASKS_MODAL_SHIFT_IPAD_AIR = 140;
+const TASKS_MODAL_SHIFT_IPAD_PRO = 230;
+
+type PomodoroTimerProps = {
+  accentColor: string;
+  surfaceColor: string;
+  borderColor: string;
+  textPrimaryColor: string;
+};
+
+function PomodoroTimer({ accentColor, surfaceColor, borderColor, textPrimaryColor }: PomodoroTimerProps) {
   const [seconds, setSeconds] = React.useState(25 * 60);
   const [running, setRunning] = React.useState(false);
 
@@ -29,15 +45,15 @@ function PomodoroTimer() {
   const remainingSeconds = String(seconds % 60).padStart(2, '0');
 
   return (
-    <View style={styles.timerCard}>
-      <Text style={styles.timerTitle}>Pomodoro</Text>
-      <Text style={styles.timerValue}>{minutes}:{remainingSeconds}</Text>
+    <View style={[styles.timerCard, { borderColor, backgroundColor: surfaceColor }]}>
+      <Text style={[styles.timerTitle, { color: textPrimaryColor }]}>Pomodoro</Text>
+      <Text style={[styles.timerValue, { color: textPrimaryColor }]}>{minutes}:{remainingSeconds}</Text>
       <View style={styles.timerActions}>
-        <Pressable style={styles.primaryBtn} onPress={() => setRunning((prev) => !prev)}>
+        <Pressable style={[styles.primaryBtn, { backgroundColor: accentColor }]} onPress={() => setRunning((prev) => !prev)}>
           <Text style={styles.primaryBtnText}>{running ? 'Pausar' : 'Iniciar'}</Text>
         </Pressable>
-        <Pressable style={styles.secondaryBtn} onPress={() => { setRunning(false); setSeconds(25 * 60); }}>
-          <Text style={styles.secondaryBtnText}>Reset</Text>
+        <Pressable style={[styles.secondaryBtn, { borderColor, backgroundColor: surfaceColor }]} onPress={() => { setRunning(false); setSeconds(25 * 60); }}>
+          <Text style={[styles.secondaryBtnText, { color: textPrimaryColor }]}>Reset</Text>
         </Pressable>
       </View>
     </View>
@@ -47,8 +63,19 @@ function PomodoroTimer() {
 export default function TasksScreen() {
   const { tasks, addTask, updateTaskStatus, removeTask } = useTasks();
   const { ui } = useAdaptiveTheme();
-  const { width } = useWindowDimensions();
-  const isBelowTablet = width < 768;
+  const isMonochrome = ui.mode.monochrome;
+  const { width, height } = useWindowDimensions();
+  const isBelowTablet = width < TABLET_BREAKPOINT;
+  const isTabletOrLarger = width >= TABLET_BREAKPOINT;
+  const shorterSide = Math.min(width, height);
+  const longerSide = Math.max(width, height);
+  const tabletModalVerticalShift = !isTabletOrLarger
+    ? 0
+    : shorterSide >= IPAD_PRO_MIN_SIDE || longerSide >= IPAD_PRO_MIN_LONG_SIDE
+      ? TASKS_MODAL_SHIFT_IPAD_PRO
+      : shorterSide >= IPAD_AIR_MIN_SIDE || longerSide >= IPAD_AIR_MIN_LONG_SIDE
+        ? TASKS_MODAL_SHIFT_IPAD_AIR
+        : TASKS_MODAL_SHIFT_IPAD_MINI;
   const [openModal, setOpenModal] = React.useState(false);
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
@@ -58,6 +85,20 @@ export default function TasksScreen() {
     'in-progress': tasks.filter((item) => item.status === 'in-progress'),
     done: tasks.filter((item) => item.status === 'done'),
   };
+
+  const columns = [
+    { key: 'todo', title: 'A Fazer', color: isMonochrome ? ui.colors.border : '#ed6c02' },
+    { key: 'in-progress', title: 'Em Progresso', color: isMonochrome ? ui.colors.border : webPalette.primary },
+    { key: 'done', title: 'Concluído', color: isMonochrome ? ui.colors.border : '#2e7d32' },
+  ];
+
+  const deleteActionColor = isMonochrome ? ui.colors.border : '#dc2626';
+  const deleteActionTextColor = isMonochrome ? ui.colors.textPrimary : '#fff';
+  const statusMeta = {
+    todo: { label: 'A Fazer', color: isMonochrome ? ui.colors.accent : '#ed6c02' },
+    'in-progress': { label: 'Em Progresso', color: isMonochrome ? ui.colors.accent : webPalette.primary },
+    done: { label: 'Concluído', color: isMonochrome ? ui.colors.accent : '#2e7d32' },
+  } as const;
 
   const createTask = () => {
     if (!title.trim()) return;
@@ -71,23 +112,41 @@ export default function TasksScreen() {
     task: { id: string; title: string; description?: string; status: 'todo' | 'in-progress' | 'done' },
     compact = false,
   ) => (
-    <View key={task.id} style={[styles.taskCard, compact && styles.taskCardCompact]}>
-      <Text style={styles.taskTitle}>{task.title}</Text>
-      {task.description ? <Text style={styles.taskDescription}>{task.description}</Text> : null}
+    <View key={task.id} style={[styles.taskCard, compact && styles.taskCardCompact, { borderColor: ui.colors.borderSoft, backgroundColor: ui.colors.surface }]}>
+      <Text style={[styles.taskTitle, { color: ui.colors.textPrimary }]}>{task.title}</Text>
+      {task.description ? <Text style={[styles.taskDescription, { color: ui.colors.textSecondary }]}>{task.description}</Text> : null}
       <View style={styles.taskActions}>
-        <Pressable style={styles.stageBtn} onPress={() => updateTaskStatus(task.id, 'todo')}>
-          <Text style={styles.stageBtnText}>A Fazer</Text>
+        <Pressable
+          style={[
+            styles.stageBtn,
+            { borderColor: ui.colors.border, backgroundColor: ui.colors.surface },
+            task.status === 'todo' && { backgroundColor: statusMeta.todo.color, borderColor: statusMeta.todo.color },
+          ]}
+          onPress={() => updateTaskStatus(task.id, 'todo')}>
+          <Text style={[styles.stageBtnText, { color: ui.colors.textPrimary }, task.status === 'todo' && { color: isMonochrome ? ui.colors.textPrimary : '#fff' }]}>{statusMeta.todo.label}</Text>
         </Pressable>
-        <Pressable style={styles.stageBtn} onPress={() => updateTaskStatus(task.id, 'in-progress')}>
-          <Text style={styles.stageBtnText}>Em Progresso</Text>
+        <Pressable
+          style={[
+            styles.stageBtn,
+            { borderColor: ui.colors.border, backgroundColor: ui.colors.surface },
+            task.status === 'in-progress' && { backgroundColor: statusMeta['in-progress'].color, borderColor: statusMeta['in-progress'].color },
+          ]}
+          onPress={() => updateTaskStatus(task.id, 'in-progress')}>
+          <Text style={[styles.stageBtnText, { color: ui.colors.textPrimary }, task.status === 'in-progress' && { color: isMonochrome ? ui.colors.textPrimary : '#fff' }]}>{statusMeta['in-progress'].label}</Text>
         </Pressable>
-        <Pressable style={styles.stageBtn} onPress={() => updateTaskStatus(task.id, 'done')}>
-          <Text style={styles.stageBtnText}>Concluído</Text>
+        <Pressable
+          style={[
+            styles.stageBtn,
+            { borderColor: ui.colors.border, backgroundColor: ui.colors.surface },
+            task.status === 'done' && { backgroundColor: statusMeta.done.color, borderColor: statusMeta.done.color },
+          ]}
+          onPress={() => updateTaskStatus(task.id, 'done')}>
+          <Text style={[styles.stageBtnText, { color: ui.colors.textPrimary }, task.status === 'done' && { color: isMonochrome ? ui.colors.textPrimary : '#fff' }]}>{statusMeta.done.label}</Text>
         </Pressable>
-        <Pressable style={styles.deleteBtn} onPress={() => removeTask(task.id)}>
+        <Pressable style={[styles.deleteBtn, { backgroundColor: deleteActionColor }]} onPress={() => removeTask(task.id)}>
           <View style={styles.actionBtnContent}>
-            <MaterialIcons name="delete" size={14} color="#fff" />
-            <Text style={styles.deleteBtnText}>Excluir</Text>
+            <MaterialIcons name="delete" size={14} color={deleteActionTextColor} />
+            <Text style={[styles.deleteBtnText, { color: deleteActionTextColor }]}>Excluir</Text>
           </View>
         </Pressable>
       </View>
@@ -112,18 +171,19 @@ export default function TasksScreen() {
         </Pressable>
       </View>
 
-      <PomodoroTimer />
+      <PomodoroTimer
+        accentColor={ui.colors.accent}
+        surfaceColor={ui.colors.surface}
+        borderColor={ui.colors.border}
+        textPrimaryColor={ui.colors.textPrimary}
+      />
 
       <View style={styles.kanbanContainer}>
-        {[
-          { key: 'todo', title: 'A Fazer', color: '#ed6c02' },
-          { key: 'in-progress', title: 'Em Progresso', color: webPalette.primary },
-          { key: 'done', title: 'Concluído', color: '#2e7d32' },
-        ].map((column) => (
-          <View key={column.key} style={[styles.column, { borderTopColor: column.color }]}>
-            <Text style={styles.columnTitle}>{column.title}</Text>
+        {columns.map((column) => (
+          <View key={column.key} style={[styles.column, { borderTopColor: column.color, borderColor: ui.colors.border, backgroundColor: ui.colors.surface }]}>
+            <Text style={[styles.columnTitle, { color: ui.colors.textPrimary }]}>{column.title}</Text>
             {(grouped[column.key as keyof typeof grouped] || []).length === 0 ? (
-              <Text style={styles.emptyText}>Nenhuma tarefa</Text>
+              <Text style={[styles.emptyText, { color: ui.colors.textSecondary }]}>Nenhuma tarefa</Text>
             ) : (
               (grouped[column.key as keyof typeof grouped] || []).map((task) => renderTaskCard(task, true))
             )}
@@ -140,31 +200,44 @@ export default function TasksScreen() {
       </View> : null}
 
       <Modal visible={openModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Nova Tarefa</Text>
-            <TextInput
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Título da tarefa"
-              style={styles.input}
-            />
-            <TextInput
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Descrição (opcional)"
-              style={[styles.input, styles.inputMultiline]}
-              multiline
-            />
-            <View style={styles.modalActions}>
-              <Pressable style={styles.secondaryBtn} onPress={() => setOpenModal(false)}>
-                <Text style={styles.secondaryBtnText}>Cancelar</Text>
-              </Pressable>
-              <Pressable style={[styles.primaryBtn, { backgroundColor: ui.colors.accent }]} onPress={createTask}>
-                <Text style={styles.primaryBtnText}>Salvar</Text>
-              </Pressable>
+        <View style={[styles.modalOverlay, isTabletOrLarger && styles.modalOverlayWide]}>
+          <ScrollView
+            style={styles.modalScroll}
+            contentContainerStyle={[styles.modalScrollContent, isTabletOrLarger && styles.modalScrollContentWide]}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View
+              style={[
+                styles.modalCard,
+                isTabletOrLarger && styles.modalCardWide,
+                isTabletOrLarger && { transform: [{ translateY: -tabletModalVerticalShift }] },
+              ]}
+            >
+              <Text style={styles.modalTitle}>Nova Tarefa</Text>
+              <TextInput
+                value={title}
+                onChangeText={setTitle}
+                placeholder="Título da tarefa"
+                style={styles.input}
+              />
+              <TextInput
+                value={description}
+                onChangeText={setDescription}
+                placeholder="Descrição (opcional)"
+                style={[styles.input, styles.inputMultiline]}
+                multiline
+              />
+              <View style={styles.modalActions}>
+                <Pressable style={styles.secondaryBtn} onPress={() => setOpenModal(false)}>
+                  <Text style={styles.secondaryBtnText}>Cancelar</Text>
+                </Pressable>
+                <Pressable style={[styles.primaryBtn, { backgroundColor: ui.colors.accent }]} onPress={createTask}>
+                  <Text style={styles.primaryBtnText}>Salvar</Text>
+                </Pressable>
+              </View>
             </View>
-          </View>
+          </ScrollView>
         </View>
       </Modal>
     </ScreenContainer>
@@ -302,11 +375,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 16,
   },
+  modalOverlayWide: {
+    paddingHorizontal: 24,
+  },
+  modalScroll: {
+    width: '100%',
+  },
+  modalScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  modalScrollContentWide: {
+    paddingVertical: 24,
+  },
   modalCard: {
+    width: '100%',
+    maxWidth: 520,
     backgroundColor: webPalette.white,
     borderRadius: 12,
     padding: 14,
     gap: 10,
+  },
+  modalCardWide: {
+    maxWidth: 460,
   },
   modalTitle: {
     fontSize: 18,

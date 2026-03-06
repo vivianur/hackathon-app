@@ -10,41 +10,43 @@ type MaterialIconName = React.ComponentProps<typeof MaterialIcons>['name'];
 export default function HomeScreen() {
   const router = useRouter();
   const { ui } = useAdaptiveTheme();
+  const isMonochrome = ui.mode.monochrome;
+  const featureAccentColor = isMonochrome ? ui.colors.accent : undefined;
 
   const features: { title: string; description: string; path: string; color: string; icon: MaterialIconName }[] = [
     {
       title: 'Plataforma',
       description: 'Explore ferramentas e recursos disponíveis na plataforma',
       path: '/(tabs)/plataforma',
-      color: webPalette.primary,
+      color: featureAccentColor ?? webPalette.primary,
       icon: 'language',
     },
     {
       title: 'Organizador de Tarefas',
       description: 'Gerencie atividades com suporte Kanban e timer Pomodoro',
       path: '/(tabs)/tasks',
-      color: webPalette.task,
+      color: featureAccentColor ?? webPalette.task,
       icon: 'assignment',
     },
     {
       title: 'Painel Cognitivo',
       description: 'Personalize a interface de acordo com suas necessidades cognitivas',
       path: '/(tabs)/dashboard',
-      color: webPalette.panel,
+      color: featureAccentColor ?? webPalette.panel,
       icon: 'dashboard',
     },
     {
       title: 'Perfil',
       description: 'Configure suas preferências e rotina de estudos',
       path: '/(tabs)/profile',
-      color: webPalette.profile,
+      color: featureAccentColor ?? webPalette.profile,
       icon: 'person',
     },
     {
       title: 'Configurações',
       description: 'Ajuste notificações e preferências do sistema',
       path: '/(tabs)/settings',
-      color: webPalette.settings,
+      color: featureAccentColor ?? webPalette.settings,
       icon: 'settings',
     },
   ];
@@ -82,10 +84,10 @@ export default function HomeScreen() {
         ))}
       </View>
 
-      {ui.content.showSupportPanels ? <View style={[styles.highlightBox, { borderRadius: ui.shape.radius, borderWidth: ui.borders.width }]}>
-        <Text style={styles.highlightTitle}>🎯 Recursos Principais</Text>
+      {ui.content.showSupportPanels ? <View style={[styles.highlightBox, { borderRadius: ui.shape.radius, borderWidth: ui.borders.width, backgroundColor: isMonochrome ? ui.colors.surface : webPalette.gradientStart, borderColor: isMonochrome ? ui.colors.border : webPalette.gradientEnd }]}>
+        <Text style={[styles.highlightTitle, { color: isMonochrome ? ui.colors.textPrimary : '#fff' }]}>🎯 Recursos Principais</Text>
         {highlights.map((item) => (
-          <Text key={item} style={styles.highlightItem}>
+          <Text key={item} style={[styles.highlightItem, { color: isMonochrome ? ui.colors.textSecondary : '#fff' }]}>
             • {item}
           </Text>
         ))}
