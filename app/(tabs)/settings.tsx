@@ -1,16 +1,46 @@
 import React from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import ScreenContainer from '@/components/layout/ScreenContainer';
 import ScreenTitle from '@/components/layout/ScreenTitle';
 import ThemedSwitch from '@/components/ui/ThemedSwitch';
 import { useAdaptiveTheme, useSettings } from '@/hooks';
 import { webPalette } from '../../constants/webPalette';
 
+const TABLET_BREAKPOINT = 768;
+const IPAD_AIR_MIN_SIDE = 820;
+const IPAD_PRO_MIN_SIDE = 1024;
+const IPAD_AIR_MIN_LONG_SIDE = 1180;
+const IPAD_PRO_MIN_LONG_SIDE = 1366;
+const SETTINGS_MODAL_SHIFT_IPAD_MINI = 85;
+const SETTINGS_MODAL_SHIFT_IPAD_AIR = 155;
+const SETTINGS_MODAL_SHIFT_IPAD_PRO = 245;
+
 export default function SettingsScreen() {
   const { settings, updatePreferences, resetToDefaults } = useSettings();
   const { ui } = useAdaptiveTheme();
+  const { width, height } = useWindowDimensions();
+  const isTabletOrLarger = width >= TABLET_BREAKPOINT;
+  const shorterSide = Math.min(width, height);
+  const longerSide = Math.max(width, height);
+  const tabletModalVerticalShift = !isTabletOrLarger
+    ? 0
+    : shorterSide >= IPAD_PRO_MIN_SIDE || longerSide >= IPAD_PRO_MIN_LONG_SIDE
+      ? SETTINGS_MODAL_SHIFT_IPAD_PRO
+      : shorterSide >= IPAD_AIR_MIN_SIDE || longerSide >= IPAD_AIR_MIN_LONG_SIDE
+        ? SETTINGS_MODAL_SHIFT_IPAD_AIR
+        : SETTINGS_MODAL_SHIFT_IPAD_MINI;
   const [showResetModal, setShowResetModal] = React.useState(false);
+
+  const alertCardBg = ui.mode.monochrome
+    ? (ui.mode.dark ? 'rgba(120,120,120,0.31)' : 'rgba(150,150,150,0.31)')
+    : 'rgba(255,121,197,0.31)';
+  const alertCardBorder = ui.mode.monochrome
+    ? (ui.mode.dark ? '#aaaaaa' : '#555555')
+    : (ui.mode.dark ? '#ff00d0' : '#be0078cc');
+  const alertTitleColor = ui.mode.monochrome
+    ? (ui.mode.dark ? '#cccccc' : '#555555')
+    : (ui.mode.dark ? '#ff00d0' : '#be0078cc');
 
   const preferences = settings.preferences;
   const resetConfirmationMessage = 'Tem certeza que deseja restaurar todas as configurações para os valores padrão?';
@@ -51,9 +81,11 @@ export default function SettingsScreen() {
     <ScreenContainer>
       <ScreenTitle icon="settings" title="Configurações" subtitle="Ajuste notificações e comportamento do sistema" />
 
-      <View style={[styles.warningCard, { borderRadius: ui.shape.radius }]}> 
-        <Text style={styles.warningTitle}>⚠️ Painel Cognitivo</Text>
-        <Text style={styles.warningText}>As configurações de acessibilidade estão disponíveis na aba Painel.</Text>
+      <View style={[styles.warningCard, { borderRadius: ui.shape.radius, backgroundColor: alertCardBg, borderColor: alertCardBorder }]}>
+        <View style={styles.alertTitleRow}>
+          <MaterialIcons name="warning-amber" size={18} color={alertTitleColor} />
+          <Text style={[styles.warningText, { color: ui.colors.textPrimary }]}>As configurações de acessibilidade estão disponíveis no Painel Cognitivo</Text>
+        </View>
       </View>
 
       <View style={[styles.section, { borderColor: ui.colors.border, borderWidth: ui.borders.width, borderRadius: ui.shape.radius, backgroundColor: ui.colors.surface, padding: ui.spacing.md }]}>
@@ -115,25 +147,40 @@ export default function SettingsScreen() {
         </Pressable>
       </View>
 
-      {ui.content.showSupportPanels ? <View style={[styles.infoCard, { borderRadius: ui.shape.radius }]}>
-        <Text style={styles.infoTitle}>💡 Configurações salvas automaticamente</Text>
-        <Text style={styles.infoText}>Suas preferências persistem mesmo após fechar e reabrir a aplicação.</Text>
+      {ui.content.showSupportPanels ? <View style={[styles.infoCard, { borderRadius: ui.shape.radius, backgroundColor: alertCardBg, borderColor: alertCardBorder }]}>
+        <View style={styles.alertTitleRow}>
+          <MaterialIcons name="info-outline" size={18} color={alertTitleColor} />
+          <Text style={[styles.infoText, { color: ui.colors.textPrimary }]}>Suas preferências persistem mesmo após fechar e reabrir a aplicação.</Text>
+        </View>
       </View> : null}
 
       <Modal visible={showResetModal} transparent animationType="fade" onRequestClose={() => setShowResetModal(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: ui.colors.surface, borderColor: ui.colors.border, borderRadius: ui.shape.radius }]}>
-            <Text style={[styles.modalTitle, { color: ui.colors.textPrimary }]}>Restaurar Configurações</Text>
-            <Text style={[styles.modalMessage, { color: ui.colors.textSecondary }]}>{resetConfirmationMessage}</Text>
-            <View style={styles.modalActions}>
-              <Pressable style={[styles.modalCancelBtn, { borderColor: ui.colors.border }]} onPress={() => setShowResetModal(false)}>
-                <Text style={[styles.modalCancelBtnText, { color: ui.colors.textPrimary }]}>Cancelar</Text>
-              </Pressable>
-              <Pressable style={styles.modalConfirmBtn} onPress={confirmReset}>
-                <Text style={styles.modalConfirmBtnText}>Restaurar</Text>
-              </Pressable>
+        <View style={[styles.modalOverlay, isTabletOrLarger && styles.modalOverlayWide]}>
+          <ScrollView
+            style={styles.modalScroll}
+            contentContainerStyle={[styles.modalScrollContent, isTabletOrLarger && styles.modalScrollContentWide]}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View
+              style={[
+                styles.modalCard,
+                { backgroundColor: ui.colors.surface, borderColor: ui.colors.border, borderRadius: ui.shape.radius },
+                isTabletOrLarger && { transform: [{ translateY: -tabletModalVerticalShift }] },
+              ]}
+            >
+              <Text style={[styles.modalTitle, { color: ui.colors.textPrimary }]}>Restaurar Configurações</Text>
+              <Text style={[styles.modalMessage, { color: ui.colors.textSecondary }]}>{resetConfirmationMessage}</Text>
+              <View style={styles.modalActions}>
+                <Pressable style={[styles.modalCancelBtn, { borderColor: ui.colors.border }]} onPress={() => setShowResetModal(false)}>
+                  <Text style={[styles.modalCancelBtnText, { color: ui.colors.textPrimary }]}>Cancelar</Text>
+                </Pressable>
+                <Pressable style={styles.modalConfirmBtn} onPress={confirmReset}>
+                  <Text style={styles.modalConfirmBtnText}>Restaurar</Text>
+                </Pressable>
+              </View>
             </View>
-          </View>
+          </ScrollView>
         </View>
       </Modal>
     </ScreenContainer>
@@ -149,18 +196,18 @@ const styles = StyleSheet.create({
   warningCard: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#f59e0b',
-    backgroundColor: '#fef3c7',
     padding: 12,
     gap: 4,
   },
   warningTitle: {
     fontWeight: '700',
-    color: '#92400e',
   },
-  warningText: {
-    color: '#92400e',
+  alertTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
+  warningText: {},
   section: {
     borderWidth: 1,
     borderColor: webPalette.border,
@@ -217,24 +264,33 @@ const styles = StyleSheet.create({
   infoCard: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#f48fb1',
-    backgroundColor: '#fce4ec',
     padding: 12,
     gap: 4,
   },
   infoTitle: {
-    color: '#880e4f',
     fontWeight: '700',
   },
-  infoText: {
-    color: '#ad1457',
-  },
+  infoText: {},
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
-    alignItems: 'center',
     padding: 16,
+  },
+  modalOverlayWide: {
+    paddingHorizontal: 24,
+  },
+  modalScroll: {
+    width: '100%',
+  },
+  modalScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  modalScrollContentWide: {
+    paddingVertical: 24,
   },
   modalCard: {
     width: '100%',

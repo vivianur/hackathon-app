@@ -21,6 +21,15 @@ export default function DashboardScreen() {
     toggleVlibras,
   } = useSettings();
   const { ui } = useAdaptiveTheme();
+  const alertCardBg = ui.mode.monochrome
+    ? (ui.mode.dark ? 'rgba(120,120,120,0.31)' : 'rgba(150,150,150,0.31)')
+    : 'rgba(255,121,197,0.31)';
+  const alertCardBorder = ui.mode.monochrome
+    ? (ui.mode.dark ? '#aaaaaa' : '#555555')
+    : (ui.mode.dark ? '#ff00d0' : '#be0078cc');
+  const alertIconColor = ui.mode.monochrome
+    ? (ui.mode.dark ? '#cccccc' : '#555555')
+    : (ui.mode.dark ? '#ff00d0' : '#be0078cc');
 
   const renderOptions = <T extends string>(
     label: string,
@@ -85,8 +94,11 @@ export default function DashboardScreen() {
         subtitle="Personalize sua experiência para atender suas necessidades cognitivas"
       />
 
-      <View style={[styles.successAlert, { padding: ui.spacing.sm }]}> 
-        <Text style={[styles.successAlertText, { fontSize: ui.typography.small }]}>Todas as configurações são salvas automaticamente e aplicadas em tempo real.</Text>
+      <View style={[styles.successAlert, { padding: ui.spacing.sm, backgroundColor: alertCardBg, borderColor: alertCardBorder }]}> 
+        <View style={styles.alertRow}>
+          <MaterialIcons name="check-circle-outline" size={18} color={alertIconColor} />
+          <Text style={[styles.successAlertText, { fontSize: ui.typography.small, color: ui.colors.textPrimary }]}>Todas as configurações são salvas automaticamente e aplicadas em tempo real.</Text>
+        </View>
       </View>
 
       {renderOptions(
@@ -94,7 +106,7 @@ export default function DashboardScreen() {
         'text-fields',
         [
           { value: 'simple', title: 'Simples' },
-          { value: 'moderate', title: 'Padrão' },
+          { value: 'moderate', title: 'Moderado' },
           { value: 'detailed', title: 'Detalhado' },
         ],
         settings.complexityLevel,
@@ -167,14 +179,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f7fb',
   },
   successAlert: {
-    backgroundColor: '#e8f5e9',
     borderWidth: 1,
-    borderColor: '#66bb6a',
     borderRadius: 10,
     padding: 10,
   },
+  alertRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   successAlertText: {
-    color: '#1b5e20',
+    flex: 1,
     fontWeight: '600',
   },
   section: {

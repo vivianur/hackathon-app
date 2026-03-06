@@ -1,6 +1,6 @@
 import React from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import ScreenContainer from '@/components/layout/ScreenContainer';
 import ScreenTitle from '@/components/layout/ScreenTitle';
 import { useAdaptiveTheme, useProfile } from '@/hooks';
@@ -9,6 +9,9 @@ import { webPalette } from '../../constants/webPalette';
 export default function ProfileScreen() {
   const { profile, updateProfile, toggleNeurodivergence, updateStudyRoutine } = useProfile();
   const { ui } = useAdaptiveTheme();
+  const { width } = useWindowDimensions();
+  const isTabletOrLarger = width >= 768;
+  const isMonochrome = ui.mode.monochrome;
   const [isEditing, setIsEditing] = React.useState(false);
   const [nameDraft, setNameDraft] = React.useState(profile.name);
   const [emailDraft, setEmailDraft] = React.useState(profile.email);
@@ -50,20 +53,22 @@ export default function ProfileScreen() {
         <Text style={[styles.profileName, { color: ui.colors.textPrimary, fontSize: ui.typography.h2 }]}>{profile.name}</Text>
         <Text style={[styles.profileEmail, { color: ui.colors.textSecondary, fontSize: ui.typography.small }]}>{profile.email}</Text>
 
-        <TextInput
-          value={nameDraft}
-          onChangeText={setNameDraft}
-          editable={isEditing}
-          placeholder="Nome"
-          style={[styles.input, { borderColor: ui.colors.border, backgroundColor: ui.colors.surface, fontSize: ui.typography.body, color: ui.colors.textPrimary }]}
-        />
-        <TextInput
-          value={emailDraft}
-          onChangeText={setEmailDraft}
-          editable={isEditing}
-          placeholder="Email"
-          style={[styles.input, { borderColor: ui.colors.border, backgroundColor: ui.colors.surface, fontSize: ui.typography.body, color: ui.colors.textPrimary }]}
-        />
+        <View style={[styles.profileInputsRow, isTabletOrLarger && styles.profileInputsRowWide]}>
+          <TextInput
+            value={nameDraft}
+            onChangeText={setNameDraft}
+            editable={isEditing}
+            placeholder="Nome"
+            style={[styles.input, isTabletOrLarger && styles.inputHalf, { borderColor: ui.colors.border, backgroundColor: ui.colors.surface, fontSize: ui.typography.body, color: ui.colors.textPrimary }]}
+          />
+          <TextInput
+            value={emailDraft}
+            onChangeText={setEmailDraft}
+            editable={isEditing}
+            placeholder="Email"
+            style={[styles.input, isTabletOrLarger && styles.inputHalf, { borderColor: ui.colors.border, backgroundColor: ui.colors.surface, fontSize: ui.typography.body, color: ui.colors.textPrimary }]}
+          />
+        </View>
 
         <View style={styles.actionsRow}>
           {!isEditing ? (
@@ -115,7 +120,7 @@ export default function ProfileScreen() {
           <Text style={[styles.sectionTitle, { color: ui.colors.textPrimary, fontSize: ui.typography.h3 }]}>Rotina de Estudo</Text>
         </View>
 
-        <Text style={styles.fieldLabel}>Período Preferido</Text>
+        <Text style={[styles.fieldLabel, { color: ui.colors.textPrimary, fontSize: ui.typography.body }]}>Período Preferido</Text>
         <View style={styles.rowWrap}>
           {[
             { value: 'morning', label: 'Manhã' },
@@ -127,20 +132,24 @@ export default function ProfileScreen() {
               key={option.value}
               style={[
                 styles.optionBtn,
+                { borderColor: ui.colors.border, backgroundColor: ui.colors.surface },
                 profile.studyRoutine.preferredStudyTime === option.value && styles.optionBtnActive,
+                profile.studyRoutine.preferredStudyTime === option.value && { backgroundColor: ui.colors.accent, borderColor: ui.colors.accent },
               ]}
               onPress={() =>
                 updateStudyRoutine({ preferredStudyTime: option.value as 'morning' | 'afternoon' | 'evening' | 'night' })
               }>
               <Text style={[
                 styles.optionText,
+                { color: ui.colors.textPrimary, fontSize: ui.typography.small },
                 profile.studyRoutine.preferredStudyTime === option.value && styles.optionTextActive,
+                profile.studyRoutine.preferredStudyTime === option.value && { color: isMonochrome ? ui.colors.textPrimary : '#fff' },
               ]}>{option.label}</Text>
             </Pressable>
           ))}
         </View>
 
-        <Text style={styles.fieldLabel}>Técnica de Foco</Text>
+        <Text style={[styles.fieldLabel, { color: ui.colors.textPrimary, fontSize: ui.typography.body }]}>Técnica de Foco</Text>
         <View style={styles.rowWrap}>
           {[
             { value: 'pomodoro', label: 'Pomodoro (25min)' },
@@ -151,30 +160,34 @@ export default function ProfileScreen() {
               key={option.value}
               style={[
                 styles.optionBtn,
+                { borderColor: ui.colors.border, backgroundColor: ui.colors.surface },
                 profile.studyRoutine.focusTechnique === option.value && styles.optionBtnActive,
+                profile.studyRoutine.focusTechnique === option.value && { backgroundColor: ui.colors.accent, borderColor: ui.colors.accent },
               ]}
               onPress={() =>
                 updateStudyRoutine({ focusTechnique: option.value as 'pomodoro' | 'custom' | 'flexible' })
               }>
               <Text style={[
                 styles.optionText,
+                { color: ui.colors.textPrimary, fontSize: ui.typography.small },
                 profile.studyRoutine.focusTechnique === option.value && styles.optionTextActive,
+                profile.studyRoutine.focusTechnique === option.value && { color: isMonochrome ? ui.colors.textPrimary : '#fff' },
               ]}>{option.label}</Text>
             </Pressable>
           ))}
         </View>
 
-        <Text style={styles.fieldLabel}>Duração da Sessão (min)</Text>
+        <Text style={[styles.fieldLabel, { color: ui.colors.textPrimary, fontSize: ui.typography.body }]}>Duração da Sessão (min)</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { borderColor: ui.colors.border, backgroundColor: ui.colors.surface, color: ui.colors.textPrimary, fontSize: ui.typography.body }]}
           keyboardType="numeric"
           value={String(profile.studyRoutine.sessionDuration)}
           onChangeText={(value) => updateStudyRoutine({ sessionDuration: Number(value) || 25 })}
         />
 
-        <Text style={styles.fieldLabel}>Duração da Pausa (min)</Text>
+        <Text style={[styles.fieldLabel, { color: ui.colors.textPrimary, fontSize: ui.typography.body }]}>Duração da Pausa (min)</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { borderColor: ui.colors.border, backgroundColor: ui.colors.surface, color: ui.colors.textPrimary, fontSize: ui.typography.body }]}
           keyboardType="numeric"
           value={String(profile.studyRoutine.breakDuration)}
           onChangeText={(value) => updateStudyRoutine({ breakDuration: Number(value) || 5 })}
@@ -235,6 +248,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     backgroundColor: webPalette.white,
+  },
+  inputHalf: {
+    flex: 1,
+    width: undefined,
+  },
+  profileInputsRow: {
+    width: '100%',
+    gap: 8,
+  },
+  profileInputsRowWide: {
+    flexDirection: 'row',
   },
   actionsRow: {
     flexDirection: 'row',
