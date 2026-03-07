@@ -33,7 +33,7 @@ export const DEFAULT_SETTINGS: Settings = {
   spacing: 'comfortable',
   animationsEnabled: true,
   cognitiveAlerts: true,
-  vlibrasEnabled: false,
+  vlibrasEnabled: true,
   darkMode: false,
   preferences: {
     notifications: true,

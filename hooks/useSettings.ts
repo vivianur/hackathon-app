@@ -31,6 +31,7 @@ function useProvideSettings(): SettingsContextValue {
       hydrate: (stored, initial) => ({
         ...initial,
         ...stored,
+        vlibrasEnabled: stored.vlibrasEnabled ?? true,
         preferences: {
           ...initial.preferences,
           ...stored.preferences,
