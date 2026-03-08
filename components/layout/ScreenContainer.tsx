@@ -1,5 +1,6 @@
 import React from 'react';
-import { Animated, Easing, ScrollView, StyleProp, StyleSheet, View, ViewStyle, useWindowDimensions } from 'react-native';
+import { Animated, Easing, Platform, ScrollView, StyleProp, StyleSheet, View, ViewStyle, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdaptiveTheme } from '@/hooks';
 
 const TABLET_BREAKPOINT = 768;
@@ -84,8 +85,11 @@ function ComplexityAnimatedItem({ children, index, motionVariant }: ComplexityAn
 export default function ScreenContainer({ children, gap, contentContainerStyle }: ScreenContainerProps) {
   const { ui, settings } = useAdaptiveTheme();
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isMobile = width < TABLET_BREAKPOINT;
   const extraBottomSpace = isMobile ? MOBILE_EXTRA_BOTTOM_SPACE : 0;
+  const nativeTopInset = Platform.OS === 'web' ? 0 : insets.top;
+  const nativeBottomInset = Platform.OS === 'web' ? 0 : insets.bottom;
   const focusBackdropColor = ui.mode.dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.3)';
   const motionVariant: MotionVariant = !settings.animationsEnabled || settings.focusMode || settings.complexityLevel === 'simple'
     ? 'none'
@@ -109,7 +113,7 @@ export default function ScreenContainer({ children, gap, contentContainerStyle }
 
   return (
     <View style={[styles.wrapper, { backgroundColor: ui.colors.bg }]}> 
-      {ui.mode.focus ? <View pointerEvents="none" style={[styles.focusBackdrop, { backgroundColor: focusBackdropColor }]} /> : null}
+      {ui.mode.focus ? <View style={[styles.focusBackdrop, { backgroundColor: focusBackdropColor, pointerEvents: 'none' }]} /> : null}
 
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
@@ -120,7 +124,8 @@ export default function ScreenContainer({ children, gap, contentContainerStyle }
             maxWidth: ui.layout.maxContentWidth,
             alignSelf: 'center',
             padding: ui.spacing.lg,
-            paddingBottom: ui.spacing.lg + extraBottomSpace,
+            paddingTop: ui.spacing.lg + nativeTopInset,
+            paddingBottom: ui.spacing.lg + extraBottomSpace + nativeBottomInset,
             gap: gap ?? ui.spacing.md,
             backgroundColor: ui.mode.focus ? 'transparent' : ui.colors.bg,
           },

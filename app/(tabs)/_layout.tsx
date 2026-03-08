@@ -3,7 +3,7 @@ import { useAdaptiveTheme } from '@/hooks';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { useWindowDimensions } from 'react-native';
+import { Platform, useWindowDimensions } from 'react-native';
 
 export default function TabLayout() {
   const { ui } = useAdaptiveTheme();
@@ -11,6 +11,7 @@ export default function TabLayout() {
   const isMobile = width < 768;
   const isTiny = width < 330;
   const isSmall = width < 389;
+  const isWeb = Platform.OS === 'web';
   const isDark = ui.mode.dark;
   const isMonochrome = ui.mode.monochrome;
   const webNavbarPink = '#be0079';
@@ -56,7 +57,7 @@ export default function TabLayout() {
           paddingTop: 0,
         },
         tabBarButton: HapticTab,
-        tabBarPosition: 'top',
+        tabBarPosition: isWeb ? 'top' : 'bottom',
         tabBarStyle: {
           width: '100%',
           maxWidth: ui.layout.maxContentWidth,
@@ -66,6 +67,7 @@ export default function TabLayout() {
           paddingHorizontal: isTiny ? 1 : 2,
           backgroundColor: navbarBackground,
           borderBottomWidth: 0,
+          borderTopWidth: 0,
           ...(ui.layout.isTabletFrame && {
             borderTopLeftRadius: 16,
             borderTopRightRadius: 16,
@@ -102,7 +104,7 @@ export default function TabLayout() {
           tabBarIcon: mkIcon('globe-outline'),
           tabBarItemStyle: {
             flex: isSmall ? 1.28 : 1.16,
-            marginTop: isMobile ? 9 : 0,
+            marginTop: isWeb && isMobile ? 9 : 0,
           },
           tabBarLabelStyle: {
             fontSize: isSmall ? 9 : fontSize,

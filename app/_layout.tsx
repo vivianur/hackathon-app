@@ -3,8 +3,9 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
+import InlineFeedbackBanner from '@/components/ui/InlineFeedbackBanner';
 import VLibrasWidget from '@/components/VLibrasWidget';
-import { SettingsProvider, useSettings } from '@/hooks';
+import { FeedbackProvider, SettingsProvider, useSettings } from '@/hooks';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -19,6 +20,7 @@ function RootNavigator() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
+      <InlineFeedbackBanner />
       <VLibrasWidget />
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
     </ThemeProvider>
@@ -28,7 +30,9 @@ function RootNavigator() {
 export default function RootLayout() {
   return (
     <SettingsProvider>
-      <RootNavigator />
+      <FeedbackProvider>
+        <RootNavigator />
+      </FeedbackProvider>
     </SettingsProvider>
   );
 }

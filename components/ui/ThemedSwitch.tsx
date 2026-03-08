@@ -68,10 +68,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   webThumbShadowLight: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 2,
+    boxShadow: '0px 2px 4px rgba(0,0,0,0.25)',
     elevation: 2,
   },
   webThumbOff: {
