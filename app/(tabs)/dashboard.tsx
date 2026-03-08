@@ -164,9 +164,9 @@ export default function DashboardScreen() {
           <MaterialIcons name="accessible" size={20} color={ui.colors.accent} />
           <Text style={[styles.sectionTitle, { color: ui.colors.textPrimary, fontSize: ui.typography.h3 }]}>Recursos Adicionais</Text>
         </View>
-        {renderToggle('Animações', settings.animationsEnabled, toggleAnimations)}
-        {renderToggle('Alertas Cognitivos', settings.cognitiveAlerts, toggleCognitiveAlerts)}
-        {renderToggle('VLibras (Libras)', settings.vlibrasEnabled, toggleVlibras)}
+        {renderToggle('Animações', settings.animationsEnabled, toggleAnimations, 'Ativa ou reduz efeitos visuais da interface')}
+        {renderToggle('Alertas Cognitivos', settings.cognitiveAlerts, toggleCognitiveAlerts, 'Mantem avisos de apoio durante o uso do app')}
+        {renderToggle('VLibras (Libras)', settings.vlibrasEnabled, toggleVlibras, 'Disponivel apenas na versao web, via widget oficial')}
       </View>
     </ScreenContainer>
   );

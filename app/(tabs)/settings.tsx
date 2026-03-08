@@ -97,7 +97,7 @@ export default function SettingsScreen() {
           'Ativar notificações',
           preferences.notifications,
           () => updatePreferences({ notifications: !preferences.notifications }),
-          'Receba alertas sobre tarefas e timers',
+          'Exibe alertas no app e, no mobile, usa notificacoes locais quando permitido',
         )}
       </View>
 
@@ -110,7 +110,7 @@ export default function SettingsScreen() {
           'Efeitos sonoros',
           preferences.soundEffects,
           () => updatePreferences({ soundEffects: !preferences.soundEffects }),
-          'Sons ao completar tarefas e finalizar timers',
+          'Som curto ao concluir tarefas e sessoes Pomodoro',
         )}
       </View>
 
@@ -123,13 +123,13 @@ export default function SettingsScreen() {
           'Mensagens de incentivo',
           preferences.encouragementMessages,
           () => updatePreferences({ encouragementMessages: !preferences.encouragementMessages }),
-          'Receba feedback positivo ao concluir atividades',
+          'Mostra mensagens positivas ao concluir tarefas e sessoes de foco',
         )}
         {renderToggle(
           'Avisos de transição',
           preferences.transitionWarnings,
           () => updatePreferences({ transitionWarnings: !preferences.transitionWarnings }),
-          'Notificações suaves antes de mudanças de atividade',
+          'Mostra aviso suave 1 minuto antes da troca entre foco e pausa',
         )}
       </View>
 
